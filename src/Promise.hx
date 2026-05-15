@@ -1,61 +1,47 @@
-package promises;
+package;
 
+import haxe.Exception;
+import types.Listener;
+import types.State;
+import types.IPromise;
+import haxe.EntryPoint;
 import sys.thread.Lock;
 import sys.thread.Thread;
 
-typedef ResolveFunc<T> = (value: T) -> Void; 
-typedef RejectFunc = (reason: String) -> Void; 
-typedef ResolverFunc<T> = (resolve: ResolveFunc<T>, reject: RejectFunc) -> Void;
-
-enum Listener<T> {
-  Resolve(cb: ResolveFunc<T>);
-  Reject(cb: RejectFunc);
-} 
-
-enum State<T> {
-  Fulfilled(value: T);
-  Rejected(reason: String);
-  Pending;
-}
-
 @:nullSafety(StrictThreaded)
-class Promise<T> {
-  var state: State<T> = Pending;
-  var listeners: Array<Listener<T>> = new Array();
+class Promise<T> implements IPromise<T> {
+  public var state = Pending;
+  public var listeners = new Array();
+	public final body: ResolverFunc<T>;
 
   #if (target.threaded)
-  final lock: Lock = new Lock();
-  #end
-
-  final body: ResolverFunc<T>;
   final thread: Thread;
+  final lock = new Lock();
+  #end
 
   public function new(resolver: ResolverFunc<T>) {
     body = resolver;
 
     #if (target.threaded)
-    trace('threaded');
-    // final main = Thread.current();
-
+    // trace('threaded');
     thread = Thread.create(() -> { 
       body(resolve, reject);
-      
-      #if (target.threaded)
-      lock.release();
-      #end
+
+      lock.release(); // this never gets called if you `throw` in the handler, maybe try catch?
     });
     
-    // trace(thread.events.wait(5));
-
-    // defer this
-    // Thread.readMessage(true);
     #else
+    // uhhhhhh
     body(resolve, reject);
     thread = null;
     #end
+
+    // don't let haxe quit before the promise completes
+    EntryPoint.runInMainThread(() -> wait());
   }
 
-  function resolve(value: T) {
+  // TODO: one base function that does the switchin bs and stuff pleas
+  public function resolve(value: T) {
     if(state != Pending) return;
 
     state = Fulfilled(value);
@@ -69,15 +55,15 @@ class Promise<T> {
       }
     }
   }
-  function reject(reason: String) {
+  public function reject(value: Any) {
     if(state != Pending) return;
 
-    state = Rejected(reason);
+    state = Rejected(value);
     
     for(listener in listeners) {
       switch listener {
         case Reject(cb): 
-          cb(reason);
+          cb(value);
 
         case _: null;
       }
@@ -86,8 +72,8 @@ class Promise<T> {
 
   public function except(callback: RejectFunc) {
     switch state {
-      case Rejected(reason):
-        callback(reason);
+      case Rejected(value):
+        callback(value);
         
       case Pending:
         listeners.push(Reject(callback));
@@ -115,10 +101,25 @@ class Promise<T> {
   // this sleep-based busy-waiting might still be kinda bad
   public function wait() {
     #if (target.threaded)
-    lock.wait();
+    if(state == Pending) lock.wait();
     #else
     while(state == Pending) { Sys.sleep(0); }
     #end
     return this;
+  }
+
+  inline public function await() {
+    if(state == Pending) wait();
+
+    switch state {
+      case Fulfilled(v): 
+        return v;
+      case Rejected(e):
+        throw e;
+      
+      // blah blah it's fine
+      case Pending:
+        return await();
+    }
   }
 }
