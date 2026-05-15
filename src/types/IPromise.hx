@@ -1,10 +1,7 @@
 package types;
 
-import haxe.Exception;
 import types.Listener;
 import types.State;
-import sys.thread.Lock;
-import sys.thread.Thread;
 
 @:nullSafety(StrictThreaded)
 interface IPromise<T> {
