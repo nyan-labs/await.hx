@@ -3,8 +3,8 @@
 
 -D analyzer-optimize
 -D analyzer-module
--D await.hx_verbose
-# -D await.hx_no_infer
+-D await_hx.verbose
+# -D await_hx.no_infer
 
 -hl build/Main.hl
 --cmd hl build/main.hl

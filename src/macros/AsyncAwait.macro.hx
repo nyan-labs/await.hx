@@ -61,7 +61,7 @@ class AsyncAwait {
     var printer = new Printer();
     // trace(printer.printFunction(func));
 
-    final return_type = #if await.hx_no_infer func.ret; #else infer_return_type(func, field); #end
+    final return_type = #if await_hx.no_infer func.ret; #else infer_return_type(func, field); #end
 
     if(return_type == null)
       Context.error('Function is missing an explicit return type (have: ${func.ret})', field.pos);
@@ -85,7 +85,7 @@ class AsyncAwait {
       case _: null; //parse_await_meta(expr);
     }
     
-		#if await.hx_verbose
+		#if await_hx.verbose
 		trace(printer.printFunction(func));
 		#end      
 
