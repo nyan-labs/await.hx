@@ -11,8 +11,6 @@ class AsyncAwait {
   public static final ASYNC_META = [":async", "async"]; 
   public static final AWAIT_META = [":await", "await"]; 
 
-  public static final NO_INFER = Context.definedValue("await.hx-no-infer") == "1";
-
   static function meta_includes(metas: Metadata, what: Array<String>) {
     for(meta in metas) {
       final meta_name = meta.name;
@@ -63,11 +61,7 @@ class AsyncAwait {
     var printer = new Printer();
     // trace(printer.printFunction(func));
 
-    final return_type = 
-      if(NO_INFER)
-        func.ret;
-      else 
-        infer_return_type(func, field);
+    final return_type = #if await.hx_no_infer func.ret; #else infer_return_type(func, field); #end
 
     if(return_type == null)
       Context.error('Function is missing an explicit return type (have: ${func.ret})', field.pos);
