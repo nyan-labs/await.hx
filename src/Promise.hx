@@ -25,8 +25,16 @@ class Promise<T> implements IPromise<T> {
     #if (target.threaded)
     // trace('threaded');
     thread = Thread.create(() -> { 
-      body(resolve, reject);
+      // add a prefix to these verbose traces? like: [await.hx]: thread initiated / threw / releasing
+			#if await.hx_verbose trace("thread init'd"); #end
+			try {
+				body(resolve, reject);
+			} catch (e) {
+				#if await.hx_verbose trace("thread threw:" + e); #end
+				reject(e);
+			}
 
+			#if await.hx_verbose trace("thread releasing"); #end
       lock.release(); // this never gets called if you `throw` in the handler, maybe try catch?
     });
     

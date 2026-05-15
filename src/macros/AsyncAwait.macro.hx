@@ -1,6 +1,6 @@
 package macros;
 
-#if macro
+import haxe.macro.ExprTools;
 import haxe.macro.Printer;
 import haxe.macro.Expr;
 import haxe.macro.Context;
@@ -47,26 +47,14 @@ class AsyncAwait {
     }
   }
 
-  // todo
-  static function parse_await_meta(e: Expr) {
-    switch e.expr {
-      // dumb traversing ast just to replace @await call() with call().await() lol 
-      case EVars(vars):
-        for(v in vars)
-          parse_await_meta(v.expr);
-
-      case ECall(e, params):
-        parse_await_meta(e);
-        for(param in params) {
-          parse_await_meta(param);
-          trace(param);
-        }
-
-      case EMeta(s, e2):
-        if(AWAIT_META.contains(s.name))
-          e.expr = (macro $e2.await()).expr;
-      
-      case _: null;
+  static function parse_await_meta(e:Expr){
+    return switch e.expr {
+      case EMeta({name:name}, inner) if (AWAIT_META.contains(name)):
+        final p = parse_await_meta(inner);
+        macro $p.await();
+      case _:
+        // exprtools.map basically walks the expr/ast-like tree, replacing @AWAit shit 
+        ExprTools.map(e, parse_await_meta); // kms
     }
     
   }
@@ -88,21 +76,25 @@ class AsyncAwait {
     if(func.expr == null)
       Context.error('Function is missing it\'s body', field.pos);
 
-    // change returns into resolve calls
-    switch func.expr.expr {
-      case EBlock(exprs): for(expr in exprs) switch expr.expr {
-        case EReturn(e):
-          // gotta fix this, no u cant just `expr = macro`
-          exprs[exprs.indexOf(expr)] = macro resolve($e);
+		// change returns into resolve calls
+		switch func.expr.expr {
+			case EBlock(exprs):
+				for (i in 0...exprs.length) {
+					switch exprs[i].expr {
+						case EReturn(e):
+							exprs[i] = macro resolve($e);
+						case _: // meow!
+							exprs[i] = parse_await_meta(exprs[i]);
+					}
+				}
 
-        case _: 
-          parse_await_meta(expr);
-      }
-
-      case _: null;
+      case _: null; //parse_await_meta(expr);
     }
-    trace(printer.printFunction(func));
-          
+    
+		#if await.hx_verbose
+		trace(printer.printFunction(func));
+		#end      
+
     // we wrap a Promise around the current return type
     final promise_type = TPath({
       pack: [],
@@ -113,11 +105,12 @@ class AsyncAwait {
 
     // then we wrap it in a promise handler 
     var body = func.expr;
-    final promise_body = macro 
+    final promise_body = macro {
+      trace("3");
       return new Promise((resolve, reject) -> 
         try $body 
         catch(e) reject(e)
-      );
+      );}
     
     func.expr = promise_body;
   }
@@ -139,4 +132,3 @@ class AsyncAwait {
     return fields;
   }
 }
-#end

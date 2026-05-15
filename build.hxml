@@ -1,11 +1,10 @@
--cp src
---main Await
-
---macro addGlobalMetadata('', '@:build(macros.AsyncAwait.build())')
+--library await.hx
+--main Main
 
 -D analyzer-optimize
 -D analyzer-module
-
+-D await.hx_verbose
 # -D await.hx-no-infer
 
 -hl build/Main.hl
+--cmd hl build/main.hl

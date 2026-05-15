@@ -6,13 +6,13 @@ import sys.thread.Thread;
 // todo: dont alllow chaining on promises that have @await
 //       add target-specific implementations of promise (as of right now it only works on sys targets)
 //       fix haxelib.json lol
-class Await {
+class Main {
   @async static function test1(a: Int = 0) {
     Sys.sleep(1);
     return 1;
   }
   @async static function test2(): Int {
-    // trace(@await test1(@await test1(2))); // TODO, this doesnt work
+    trace(@await test1(@await test1(2))); // TODO, this doesnt work
 
     Sys.sleep(6);
     throw "erm";
