@@ -12,7 +12,7 @@ class Await {
     return 1;
   }
   @async static function test2(): Int {
-    trace(@await test1(@await test1(2))); // TODO, this doesnt work
+    // trace(@await test1(@await test1(2))); // TODO, this doesnt work
 
     Sys.sleep(6);
     throw "erm";

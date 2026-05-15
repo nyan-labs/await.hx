@@ -122,4 +122,8 @@ class Promise<T> implements IPromise<T> {
         return await();
     }
   }
+
+  public function toString() {
+    return 'Promise { <state>: $state }';
+  }
 }

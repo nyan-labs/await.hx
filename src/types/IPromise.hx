@@ -21,4 +21,6 @@ interface IPromise<T> {
 
   public function wait(): IPromise<T>;
   public function await(): T;
+
+  public function toString(): String;
 }
