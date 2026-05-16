@@ -101,10 +101,8 @@ class AsyncAwait {
     var body = func.expr;
     final promise_body = macro {
       trace("3");
-      return new Promise((resolve, reject) -> 
-        try $body 
-        catch(e) reject(e)
-      );}
+      return new Promise((resolve, reject) -> $body );
+	}
     
     func.expr = promise_body;
   }
