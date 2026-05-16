@@ -5,7 +5,6 @@
   "tags": ["api", "promise", "async", "await"],
   "description": "a library for making asynchronous functions and promises, with nice await/async syntatic sugar",
   "version": "0.0.0",
-  "classPath": "await/",
   "releasenote": "null",
   "contributors": ["qzipp"],
   "dependencies": {}

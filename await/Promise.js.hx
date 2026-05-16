@@ -1,8 +1,8 @@
-package;
+package await;
 
-import types.Listener;
-import types.State;
-import types.IPromise;
+import await.types.Listener;
+import await.types.State;
+import await.types.IPromise;
 
 //TODO
 @:native("AwaitPromise") 

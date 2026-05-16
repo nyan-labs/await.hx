@@ -1,4 +1,4 @@
-package types;
+package await.types;
 
 typedef ResolveFunc<T> = (value: T) -> Void; 
 typedef RejectFunc = (value: Any) -> Void; 

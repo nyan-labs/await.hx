@@ -1,4 +1,4 @@
-package types;
+package await.types;
 
 enum State<T> {
   Fulfilled(value: T);
