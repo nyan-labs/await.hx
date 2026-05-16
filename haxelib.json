@@ -6,6 +6,6 @@
   "description": "a library for making asynchronous functions and promises, with nice await/async syntatic sugar",
   "version": "0.0.0",
   "releasenote": "null",
-  "contributors": ["qzipp"],
+  "contributors": ["qzipp", "hackx2"],
   "dependencies": {}
 }
