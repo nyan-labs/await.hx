@@ -1,4 +1,4 @@
-package macros;
+package await.macros;
 
 import haxe.macro.ExprTools;
 import haxe.macro.Printer;
@@ -101,7 +101,7 @@ class AsyncAwait {
 
     // we wrap a Promise around the current return type
     final promise_type = TPath({
-      pack: [],
+      pack: ["await"],
       name: "Promise",
       params: [TPType(return_type)]
     });
@@ -110,7 +110,7 @@ class AsyncAwait {
     // then we wrap it in a promise handler 
     var body = func.expr;
     final promise_body = macro
-      return new Promise((resolve, reject) -> $body);
+      return new await.Promise((resolve, reject) -> $body);
     
     func.expr = promise_body;
   }

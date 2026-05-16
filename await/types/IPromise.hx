@@ -1,7 +1,7 @@
-package types;
+package await.types;
 
-import types.Listener;
-import types.State;
+import await.types.Listener;
+import await.types.State;
 
 @:nullSafety(StrictThreaded)
 interface IPromise<T> {

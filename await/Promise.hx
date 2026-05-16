@@ -1,9 +1,9 @@
-package;
+package await;
 
 import haxe.Exception;
-import types.Listener;
-import types.State;
-import types.IPromise;
+import await.types.Listener;
+import await.types.State;
+import await.types.IPromise;
 import haxe.EntryPoint;
 
 @:nullSafety(StrictThreaded)
