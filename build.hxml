@@ -7,4 +7,6 @@
 # -D await_hx.no_infer
 
 -hl build/Main.hl
---cmd hl build/main.hl
+--cmd hl build/Main.hl
+# -js build/Main.js
+# --cmd bun build/Main.js

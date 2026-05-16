@@ -27,12 +27,12 @@ class AsyncAwait {
     if(func.ret != null) return func.ret;
 
     try {
-      var typed_expr = Context.typeExpr({
-        expr: EFunction(FAnonymous, func),
+      // this is not that great of a way to get a type 
+      var type = Context.typeof({
+        expr: EFunction(FNamed("hi", false), func),
         pos: field.pos
       });
 
-      var type = typed_expr.t;
       switch type {
         case TFun(args, ret):
           return ret.toComplexType();
@@ -41,20 +41,34 @@ class AsyncAwait {
           throw Context.error('Not a function', func.expr.pos);
       }
     } catch(e) {
-      throw Context.error('Function could not be inferred: ${e.toString()}', func.expr.pos);
+      Context.warning('Function could not be inferred: ${e.toString()}', func.expr.pos);
+      return TPath({
+        pack: [],
+        name: "Any",
+        params: []
+      });
     }
   }
 
-  static function parse_await_meta(e:Expr){
+  static function parse_await_meta(e: Expr): Expr {
     return switch e.expr {
-      case EMeta({name:name}, inner) if (AWAIT_META.contains(name)):
+      case EMeta({name: name}, inner) if(AWAIT_META.contains(name)):
         final p = parse_await_meta(inner);
+        // check the type and see if its a promise ig
         macro $p.await();
       case _:
         // exprtools.map basically walks the expr/ast-like tree, replacing @AWAit shit 
         ExprTools.map(e, parse_await_meta); // kms
     }
-    
+  }
+  static function resolve_returns(e: Expr): Expr {
+    return switch e.expr {
+      case EReturn(e):
+        macro return resolve($e);
+        
+      case _:
+        ExprTools.map(e, resolve_returns);
+    }
   }
 
   static function asynchronize(func: Function, field: Field) {
@@ -73,13 +87,9 @@ class AsyncAwait {
 		// change returns into resolve calls
 		switch func.expr.expr {
 			case EBlock(exprs):
-				for (i in 0...exprs.length) {
-					switch exprs[i].expr {
-						case EReturn(e):
-							exprs[i] = macro resolve($e);
-						case _: // meow!
-							exprs[i] = parse_await_meta(exprs[i]);
-					}
+				for(i in 0...exprs.length) {
+					exprs[i] = resolve_returns(exprs[i]);
+					exprs[i] = parse_await_meta(exprs[i]);
 				}
 
       case _: null; //parse_await_meta(expr);
@@ -99,10 +109,8 @@ class AsyncAwait {
 
     // then we wrap it in a promise handler 
     var body = func.expr;
-    final promise_body = macro {
-      trace("3");
-      return new Promise((resolve, reject) -> $body );
-	}
+    final promise_body = macro
+      return new Promise((resolve, reject) -> $body);
     
     func.expr = promise_body;
   }

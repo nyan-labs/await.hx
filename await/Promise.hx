@@ -5,26 +5,25 @@ import types.Listener;
 import types.State;
 import types.IPromise;
 import haxe.EntryPoint;
-import sys.thread.Lock;
-import sys.thread.Thread;
 
 @:nullSafety(StrictThreaded)
 class Promise<T> implements IPromise<T> {
-  public var state = Pending;
-  public var listeners = new Array();
-	public final body: ResolverFunc<T>;
-
   #if (target.threaded)
-  final thread: Thread;
-  final lock = new Lock();
+  final thread: sys.thread.Thread;
+  final lock = new sys.thread.Lock();
   #end
 
-  public function new(resolver: ResolverFunc<T>) {
-    body = resolver;
+  public var state: State<T> = Pending;
+  public var listeners: Array<Listener<T>> = new Array();
+
+  public final body: ResolverFunc<T>;
+
+  public function new(body: ResolverFunc<T>) {
+    this.body = body;
 
     #if (target.threaded)
     // trace('threaded');
-    thread = Thread.create(() -> { 
+    thread = sys.thread.Thread.create(() -> { 
       // add a prefix to these verbose traces? like: [await.hx]: thread initiated / threw / releasing
 			#if await_hx.verbose trace("thread init'd"); #end
 			try {
@@ -39,9 +38,7 @@ class Promise<T> implements IPromise<T> {
     });
     
     #else
-    // uhhhhhh
-    body(resolve, reject);
-    thread = null;
+    haxe.Timer.delay(body, 0);
     #end
 
     // don't let haxe quit before the promise completes
@@ -117,8 +114,6 @@ class Promise<T> implements IPromise<T> {
   }
 
   inline public function await() {
-    if(state == Pending) wait();
-
     switch state {
       case Fulfilled(v): 
         return v;
@@ -127,11 +122,12 @@ class Promise<T> implements IPromise<T> {
       
       // blah blah it's fine
       case Pending:
+        wait();
+        
         return await();
     }
   }
 
-  public function toString() {
+  public function toString(): String
     return 'Promise { <state>: $state }';
-  }
 }

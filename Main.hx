@@ -2,19 +2,22 @@ package;
 
 import haxe.EntryPoint;
 import haxe.MainLoop;
-import sys.thread.Thread;
 // todo: dont alllow chaining on promises that have @await
 //       add target-specific implementations of promise (as of right now it only works on sys targets)
+//       fix errors sucking on @async
 //       fix haxelib.json lol
 class Main {
   @async static function test1(a: Int = 0) {
-    Sys.sleep(1);
+    // Sys.sleep(1);
     return 1;
   }
   @async static function test2(): Int {
-    trace(@await test1(@await test1(2))); // TODO, this doesnt work
+    if(@await test1(@await test1()) == @await test1(1)) {
+      trace("yope");
+      return 4;
+    } else trace("nope");
 
-    Sys.sleep(6);
+    // Sys.sleep(6);
     throw "erm";
     return 2;
   }
@@ -33,7 +36,7 @@ class Main {
     // p
       // .except((e) -> trace("err", e));
     //   .then((data) -> trace("AAA", data));
-    
+
     trace(test1().wait().state);
     trace(test2().wait().state);
 
