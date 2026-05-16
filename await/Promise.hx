@@ -104,7 +104,7 @@ class Promise<T> implements IPromise<T> {
   }
 
   // this sleep-based busy-waiting might still be kinda bad
-  public function wait() {
+  private function wait() {
     #if (target.threaded)
     if(state == Pending) lock.wait();
     #else
@@ -113,7 +113,7 @@ class Promise<T> implements IPromise<T> {
     return this;
   }
 
-  inline public function await() {
+  inline function await() {
     switch state {
       case Fulfilled(v): 
         return v;

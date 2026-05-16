@@ -22,7 +22,7 @@ class Main {
     return 2;
   }
 
-  static public function main() {
+  @async static public function main() {
     // var p = new Promise((resolve, reject) -> {
       // Sys.sleep(6);
 
@@ -37,8 +37,8 @@ class Main {
       // .except((e) -> trace("err", e));
     //   .then((data) -> trace("AAA", data));
 
-    trace(test1().wait().state);
-    trace(test2().wait().state);
+    trace(@await test1());
+    trace(@await test2());
 
 
     // trace("hi");

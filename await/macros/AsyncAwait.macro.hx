@@ -41,10 +41,10 @@ class AsyncAwait {
           throw Context.error('Not a function', func.expr.pos);
       }
     } catch(e) {
-      Context.warning('Function could not be inferred: ${e.toString()}', func.expr.pos);
+      // Context.warning('Function could not be inferred: ${e.toString()}', func.expr.pos);
       return TPath({
         pack: [],
-        name: "Any",
+        name: "Void",
         params: []
       });
     }
@@ -55,7 +55,7 @@ class AsyncAwait {
       case EMeta({name: name}, inner) if(AWAIT_META.contains(name)):
         final p = parse_await_meta(inner);
         // check the type and see if its a promise ig
-        macro $p.await();
+        macro @:privateAccess $p.await();
       case _:
         // exprtools.map basically walks the expr/ast-like tree, replacing @AWAit shit 
         ExprTools.map(e, parse_await_meta); // kms
@@ -72,6 +72,8 @@ class AsyncAwait {
   }
 
   static function asynchronize(func: Function, field: Field) {
+    final is_main = field.access.contains(AStatic) && field.name == "main";
+
     var printer = new Printer();
     // trace(printer.printFunction(func));
 
@@ -97,10 +99,10 @@ class AsyncAwait {
     
 		#if await_hx.verbose
 		trace(printer.printFunction(func));
-		#end      
+		#end
 
     // we wrap a Promise around the current return type
-    final promise_type = TPath({
+    final promise_type = if(is_main) return_type else TPath({
       pack: [],
       name: "Promise",
       params: [TPType(return_type)]
@@ -109,7 +111,10 @@ class AsyncAwait {
 
     // then we wrap it in a promise handler 
     var body = func.expr;
-    final promise_body = macro
+
+    final promise_body = if(is_main) macro
+      new Promise((resolve, reject) -> $body);
+    else macro
       return new Promise((resolve, reject) -> $body);
     
     func.expr = promise_body;
