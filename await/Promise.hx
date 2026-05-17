@@ -40,13 +40,14 @@ class Promise<T> implements IPromise<T> {
 			#if await_hx.verbose trace("thread releasing"); #end
       lock.release(); // this never gets called if you `throw` in the handler, maybe try catch?
     });
-    
-    #else
-    haxe.Timer.delay(body, 0);
-    #end
 
     // don't let haxe quit before the promise completes
     EntryPoint.runInMainThread(() -> wait());
+    #elseif lua
+    lua.Coroutine.wrap(() -> body(resolve, reject))();
+    #else
+    haxe.Timer.delay(() -> body(resolve, reject), 0);
+    #end
   }
 
   inline static public function transform<T>(body: ResolverFunc<T>)

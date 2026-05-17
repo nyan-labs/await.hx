@@ -23,6 +23,7 @@ class Main {
   }
 
   @async static public function main() {
+    trace("hi");
     // var p = new Promise((resolve, reject) -> {
       // Sys.sleep(6);
 
