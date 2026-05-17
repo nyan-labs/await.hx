@@ -6,6 +6,10 @@ import await.types.State;
 import await.types.IPromise;
 import haxe.EntryPoint;
 
+#if !sys
+#error "This class is not available on this target"
+#end
+
 @:nullSafety(StrictThreaded)
 class Promise<T> implements IPromise<T> {
   #if (target.threaded)
@@ -44,6 +48,9 @@ class Promise<T> implements IPromise<T> {
     // don't let haxe quit before the promise completes
     EntryPoint.runInMainThread(() -> wait());
   }
+
+  inline static public function transform<T>(body: ResolverFunc<T>)
+    return body;
 
   // TODO: one base function that does the switchin bs and stuff pleas
   public function resolve(value: T) {
@@ -110,10 +117,9 @@ class Promise<T> implements IPromise<T> {
     #else
     while(state == Pending) { Sys.sleep(0); }
     #end
-    return this;
   }
 
-  inline function await() {
+  private inline function await() {
     switch state {
       case Fulfilled(v): 
         return v;

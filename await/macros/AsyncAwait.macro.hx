@@ -113,9 +113,13 @@ class AsyncAwait {
     var body = func.expr;
 
     final promise_body = if(is_main) macro
-      new await.Promise((resolve, reject) -> $body);
+      new await.Promise(
+        await.Promise.transform((resolve, reject) -> $body)
+      );
     else macro
-      return new await.Promise((resolve, reject) -> $body);
+      return new await.Promise(
+        await.Promise.transform((resolve, reject) -> $body)
+      );
     
     func.expr = promise_body;
   }

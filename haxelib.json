@@ -2,9 +2,9 @@
   "name": "await.hx",
   "url" : "https://github.com/nyan-labs/await.hx/",
   "license": "GPL",
-  "tags": ["api", "promise", "async", "await"],
-  "description": "a library for making asynchronous functions and promises, with nice await/async syntatic sugar",
-  "version": "0.0.0",
+  "tags": ["api", "promise", "async", "await", "cross"],
+  "description": "a cross-platform library for making asynchronous functions and promises, with nice await/async syntatic sugar",
+  "version": "0.0.1",
   "releasenote": "null",
   "contributors": ["qzipp", "hackx2"],
   "dependencies": {}

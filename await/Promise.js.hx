@@ -1,10 +1,10 @@
 package await;
 
+import haxe.Rest;
 import await.types.Listener;
 import await.types.State;
 import await.types.IPromise;
 
-//TODO
 @:native("AwaitPromise") 
 class Promise<T> implements IPromise<T> {
   var js_resolve: (v: Dynamic) -> Void;
@@ -26,6 +26,10 @@ class Promise<T> implements IPromise<T> {
       body(this.resolve, this.reject);
     });
   }
+
+  extern inline static public function transform<T>(body: ResolverFunc<T>): ResolverFunc<T>
+    return js.Syntax.code("async {0}", body);
+
   public function resolve(value: T) {
     if(state != Pending) return;
 
@@ -88,13 +92,12 @@ class Promise<T> implements IPromise<T> {
   public function toString(): String
     return 'Promise { <state>: $state }';
 
-  public function wait(): IPromise<T> {
-    //TODO HOW DO WE EVEN DO THISS
-    while(state == Pending) {}
-    return this;
+  // yes i am evil
+  extern inline private function wait() {
+    return js.Syntax.code("await this.js_promise");
   }
 
-  public function await(): T {
+  extern inline private function await(): T {
     switch state {
       case Fulfilled(v): 
         return v;
