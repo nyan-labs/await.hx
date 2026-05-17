@@ -24,6 +24,12 @@ class Main {
     return 2;
   }
 
+	@async static function buh():Int {
+		final meow = @await Cat.speak();
+		trace(@await Cat.identify(meow));
+	//	return 67;
+	}
+
   @async static public function main() {
     trace("hi");
     // var p = new Promise((resolve, reject) -> {
@@ -40,6 +46,8 @@ class Main {
       // .except((e) -> trace("err", e));
     //   .then((data) -> trace("AAA", data));
 
+    @await buh();
+
     trace(@await test1());
     trace(@await test2());
 
@@ -49,4 +57,14 @@ class Main {
     // Sys.sleep(3);
     // trace("hi");
   }  
+}
+
+final class Cat {
+	@async public static function speak():Bool {
+		return true;
+	};
+
+	@async public static function identify(ae:Dynamic):String {
+		return "qzip";
+	};
 }

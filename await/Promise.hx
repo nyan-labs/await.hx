@@ -37,8 +37,9 @@ class Promise<T> implements IPromise<T> {
 				reject(e);
 			}
 
-			#if await_hx.verbose trace("thread releasing"); #end
-      lock.release(); // this never gets called if you `throw` in the handler, maybe try catch?
+      // this was throwing null access errors for some reason
+      // so we're going to release inside of `resolve` and `reject` instead
+      //lock.release(); // this never gets called if you `throw` in the handler, maybe try catch?
     });
 
     // don't let haxe quit before the promise completes
@@ -50,6 +51,12 @@ class Promise<T> implements IPromise<T> {
     #end
   }
 
+  @:noCompletion
+  inline function release_lock():Void {
+    #if await_hx.verbose trace("thread releasing"); #end
+    lock.release();
+  }
+
   inline static public function transform<T>(body: ResolverFunc<T>)
     return body;
 
@@ -58,6 +65,8 @@ class Promise<T> implements IPromise<T> {
     if(state != Pending) return;
 
     state = Fulfilled(value);
+
+    #if (target.threaded) release_lock(); #end
 
     for(listener in listeners) {
       switch listener {
@@ -72,6 +81,8 @@ class Promise<T> implements IPromise<T> {
     if(state != Pending) return;
 
     state = Rejected(value);
+
+    #if (target.threaded) release_lock(); #end
     
     for(listener in listeners) {
       switch listener {
