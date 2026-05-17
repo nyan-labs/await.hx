@@ -10,5 +10,7 @@
 --cmd hl build/Main.hl
 # -js build/Main.js
 # --cmd bun build/Main.js
-# --lua bin/Main.lua
-# --cmd ./bin/lua bin/Main.lua
+# --lua build/Main.lua
+# --cmd lua bin/Main.lua
+
+# --swf build/Main.swf

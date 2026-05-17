@@ -12,7 +12,9 @@ class Main {
     return 1;
   }
   @async static function test2(): Int {
-    if(@await test1(@await test1()) == @await test1(1)) {
+    var test = @await test1(1);
+
+    if(@await test1(@await test1()) == test) {
       trace("yope");
       return 4;
     } else trace("nope");

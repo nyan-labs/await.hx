@@ -50,6 +50,27 @@ class AsyncAwait {
     }
   }
 
+  /* MASSIVE TODO:
+for example, we need to turn this
+
+@async function buh() {
+  final meow = @await Cat.speak();
+  
+  trace(@await Cat.identify(meow));
+}
+
+into this
+function buh() {
+  return new await.Promise(() -> {
+    Cat.speak().then((value) -> {
+      final meow = value;
+
+      Cat.identify().then((value) -> { trace(value); });
+    });
+  });
+}
+  */
+
   static function parse_await_meta(e: Expr): Expr {
     return switch e.expr {
       case EMeta({name: name}, inner) if(AWAIT_META.contains(name)):

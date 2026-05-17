@@ -1,59 +1,35 @@
 package await;
 
-import haxe.Exception;
+import haxe.Rest;
 import await.types.Listener;
 import await.types.State;
 import await.types.IPromise;
-import haxe.EntryPoint;
 
-#if !sys
-#error "This class is not available on this target"
-#end
-
-@:nullSafety(StrictThreaded)
 class Promise<T> implements IPromise<T> {
-  #if (target.threaded)
-  final thread: sys.thread.Thread;
-  final lock = new sys.thread.Lock();
-  #end
+  static var EVENT_ID = 0;
 
   public var state: State<T> = Pending;
   public var listeners: Array<Listener<T>> = new Array();
 
   public final body: ResolverFunc<T>;
-
+  
   public function new(body: ResolverFunc<T>) {
     this.body = body;
 
-    #if (target.threaded)
-    // trace('threaded');
-    thread = sys.thread.Thread.create(() -> { 
-      // add a prefix to these verbose traces? like: [await.hx]: thread initiated / threw / releasing
-			#if await_hx.verbose trace("thread init'd"); #end
-			try {
-				body(resolve, reject);
-			} catch (e) {
-				#if await_hx.verbose trace("thread threw:" + e); #end
-				reject(e);
-			}
+    final promise_event_name = '__promise_${EVENT_ID++}';
+    var promise_event = new flash.events.Event(promise_event_name);
+    var promise_event_listener = (event) -> body(this.resolve, this.reject);
 
-			#if await_hx.verbose trace("thread releasing"); #end
-      lock.release(); // this never gets called if you `throw` in the handler, maybe try catch?
-    });
-
-    // don't let haxe quit before the promise completes
-    EntryPoint.runInMainThread(() -> wait());
-    #elseif lua
-    lua.Coroutine.wrap(() -> body(resolve, reject))();
-    #else
-    haxe.Timer.delay(() -> body(resolve, reject), 0);
-    #end
+    flash.Lib.current.stage.addEventListener(promise_event_name, promise_event_listener);
+    flash.Lib.current.stage.dispatchEvent(promise_event);
+    flash.Lib.current.stage.removeEventListener(promise_event_name, promise_event_listener);
   }
 
-  inline static public function transform<T>(body: ResolverFunc<T>)
+  extern inline static public function transform<T>(body: ResolverFunc<T>): ResolverFunc<T>
     return body;
 
-  // TODO: one base function that does the switchin bs and stuff pleas
+  // todo: use a util class? or smth to not have to reimplement this every single damn time
+  // or @:build??
   public function resolve(value: T) {
     if(state != Pending) return;
 
@@ -111,18 +87,28 @@ class Promise<T> implements IPromise<T> {
     return this;
   }
 
-  // this sleep-based busy-waiting might still be kinda bad
-  @:deprecated
-  private function wait() {
-    #if (target.threaded)
-    if(state == Pending) lock.wait();
-    #else
-    while(state == Pending) { Sys.sleep(0); }
-    #end
+  public function toString(): String
+    return 'Promise { <state>: $state }';
+
+  // yes i am evil
+  extern inline private function wait() {
+    trace("HI");
+
+    return;
+    // return js.Syntax.code("await this.js_promise");
   }
 
-  @:deprecated
-  private inline function await() {
+
+  // haxe:
+  // public static function run() : void
+  //     {
+  //        Lib.current.stage.addEventListener(Event.ENTER_FRAME,function(param1:*):void
+  //        {
+  //           EntryPoint.processEvents();
+  //        });
+      // }
+
+  extern inline private function await(): T {
     switch state {
       case Fulfilled(v): 
         return v;
@@ -132,11 +118,8 @@ class Promise<T> implements IPromise<T> {
       // blah blah it's fine
       case Pending:
         wait();
-        
+
         return await();
     }
   }
-
-  public function toString(): String
-    return 'Promise { <state>: $state }';
 }
