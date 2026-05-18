@@ -31,20 +31,13 @@ class Main {
 	}
 
   @async static public function main() {
-    trace("hi");
-    // var p = new Promise((resolve, reject) -> {
-      // Sys.sleep(6);
+    trace("async test start");
+    var p = new await.Promise((resolve, reject) -> {
+      resolve("promise test");
+    });
+    trace(p);
 
-      // trace("hi");
-    
-      // reject("ermff");
-    //   reject("hi");
-    //   reject("hi");
-    // });
-
-    // p
-      // .except((e) -> trace("err", e));
-    //   .then((data) -> trace("AAA", data));
+    trace(@await p);
 
     @await buh();
 

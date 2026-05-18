@@ -43,7 +43,7 @@ class Promise<T> implements IPromise<T> {
     });
 
     // don't let haxe quit before the promise completes
-    EntryPoint.runInMainThread(() -> wait());
+    EntryPoint.runInMainThread(wait);
     #elseif lua
     lua.Coroutine.wrap(() -> body(resolve, reject))();
     #else

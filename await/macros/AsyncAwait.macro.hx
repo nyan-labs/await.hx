@@ -85,9 +85,23 @@ class AsyncAwait {
 				case _:
 					final found:Null<ExtractedAwait> = extract_first_await(e);
 					if (found != null) {
+            // trace((new Printer()).printExprs(exprs, "; "));
+            trace(i, exprs[i]);
 						// replace current expr with a fixed/rebuilt version
+						final old_exprs = exprs.slice(0, i);
+            // trace((new Printer()).printExprs(old_exprs, ";1 "));
+
 						final new_exprs = [found.rebuilt_expr].concat(exprs.slice(i + 1));
-						return make_then(found.promise_expr, build_continuation(new_exprs, pos));
+            // trace((new Printer()).printExprs(new_exprs, ";2 "));
+
+            final then_exprs = make_then(found.promise_expr, build_continuation(new_exprs, pos));
+
+            old_exprs.push(then_exprs);
+
+            return {
+              expr: EBlock(old_exprs),
+              pos: pos
+            };
 					}
 			}
 		}
@@ -164,7 +178,7 @@ class AsyncAwait {
 		}
 
 		#if await_hx.verbose
-		trace(printer.printFunction(func));
+		trace('${field.name}:', printer.printFunction(func));
 		#end
 
 		// we wrap a Promise around the current return type
