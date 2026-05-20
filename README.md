@@ -1,6 +1,9 @@
 # await.hx
 await.hx is a cross-platform library for doing asynchronous operations, using Haxe metadata to annotate functions with `@async`/`@:async` to transform them into a Promise with `.then` and `.except` callbacks
 
+> [!TIP]
+> to avoid the constant `@:build(await.AsyncAwait.build())`, we can put `--macro addGlobalMetadata('', '@:build(await.macros.AsyncAwait.build())')` inside `extraParams.hxml`
+
 ```haxe
 enum Noise {
   Meow;
@@ -39,4 +42,3 @@ class Main {
   }
 }
 ```
-to avoid the constant `@:build(bla.Bla.build())`, we can put `--macro addGlobalMetadata('', '@:build(await.macros.AsyncAwait.build())')` inside `extraParams.hxml`
