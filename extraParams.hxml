@@ -1,1 +1,2 @@
+--macro addGlobalMetadata('', '@:build(await.macros.Analyzer.init())')
 --macro addGlobalMetadata('', '@:build(await.macros.AsyncAwait.build())')
