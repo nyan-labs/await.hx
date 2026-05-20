@@ -56,7 +56,7 @@ class AsyncAwait {
 	}
 
 	inline static function make_then(promise:Expr, continuation:Expr):Expr {
-		return macro $promise.then(value -> $continuation).except(reject);
+		return macro $promise.then(value -> $continuation).except((e) -> throw e);
 	}
 
 	// the `.except` thingy ensures any unhandled errors nested in .`next()` bubble up
@@ -67,45 +67,71 @@ class AsyncAwait {
 				// i'm honestly just typing random shit now
 				// i think this'll work... idk tho
 				// note from future self: yes, it did work
-				case EVars([{name: name, expr: {expr: EMeta({name: name2}, promise_expr)}}]) if (AWAIT_META.contains(name2)):
+				case EVars([
+					{
+						name: name,
+						expr: {expr: EMeta({name: name2}, promise_expr)}
+					}
+				]) if (AWAIT_META.contains(name2)):
 					// unwrap any nested `@await`'s inside the promise expr itself
 					final inner:Null<ExtractedAwait> = extract_first_await(promise_expr);
+
 					if (inner != null) {
 						// re-process this whole statement with the inner `@await` shit omitted
 						var new_exprs:Array<Expr> = [{expr: EVars([{name: name, type: null, expr: inner.rebuilt_expr}]), pos: e.pos}];
+        
+            final old_exprs = new_exprs.slice(0, i);
 
 						// i forgor `.concat(...)` makes a new array, and doesn't modify the original
 						new_exprs = new_exprs.concat(exprs.slice(i + 1));
 
-						return make_then(inner.promise_expr, build_continuation(new_exprs, pos));
+						final then_exprs = make_then(inner.promise_expr, build_continuation(new_exprs, pos));
+
+						old_exprs.push(then_exprs);
+
+						return {
+							expr: EBlock(old_exprs),
+							pos: pos
+						};
 					}
-					return make_then(promise_expr, macro {var $name = value; ${build_continuation(exprs.slice(i + 1), pos)};}); // iykyk
+
+          final old_exprs = exprs.slice(0, i);
+						trace(i, (new Printer()).printExprs(old_exprs, "; "));
+					final then_exprs = make_then(promise_expr, macro {var $name = value; ${build_continuation(exprs.slice(i + 1), pos)};}); // iykyk
+
+					old_exprs.push(then_exprs);
+
+					return {
+						expr: EBlock(old_exprs),
+						pos: pos
+					};
 
 				// for stuff like: `@await meow()`ike: `@await meow()` or `if(@await purr() == x)`
 				case _:
 					final found:Null<ExtractedAwait> = extract_first_await(e);
 					if (found != null) {
-            // trace((new Printer()).printExprs(exprs, "; "));
-            trace(i, exprs[i]);
+						// trace((new Printer()).printExprs(exprs, "; "));
+						// trace(i, exprs[i]);
 						// replace current expr with a fixed/rebuilt version
 						final old_exprs = exprs.slice(0, i);
-            // trace((new Printer()).printExprs(old_exprs, ";1 "));
+						// trace((new Printer()).printExprs(old_exprs, ";1 "));
 
 						final new_exprs = [found.rebuilt_expr].concat(exprs.slice(i + 1));
-            // trace((new Printer()).printExprs(new_exprs, ";2 "));
+						// trace((new Printer()).printExprs(new_exprs, ";2 "));
 
-            final then_exprs = make_then(found.promise_expr, build_continuation(new_exprs, pos));
+						final then_exprs = make_then(found.promise_expr, build_continuation(new_exprs, pos));
 
-            old_exprs.push(then_exprs);
+						old_exprs.push(then_exprs);
 
-            return {
-              expr: EBlock(old_exprs),
-              pos: pos
-            };
+						return {
+							expr: EBlock(old_exprs),
+							pos: pos
+						};
 					}
 			}
 		}
 
+    // qzip: orbl next time plz put more informative comments !!!
 		// watafak am i even doing QwQ
 		return resolve_returns(({expr: EBlock(exprs), pos: pos} : Expr));
 	}
@@ -192,8 +218,10 @@ class AsyncAwait {
 		// then we wrap it in a promise handler
 		var body = func.expr;
 
-		final promise_body = if (is_main) macro new await.Promise(await.Promise.transform((resolve,
-				reject) -> $body)); else macro return new await.Promise(await.Promise.transform((resolve, reject) -> $body));
+		final promise_body = if (is_main) 
+      macro new await.Promise(await.Promise.transform((resolve, reject) -> $body)); 
+    else 
+      macro return new await.Promise(await.Promise.transform((resolve, reject) -> $body));
 
 		func.expr = promise_body;
 	}

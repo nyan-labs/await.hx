@@ -14,3 +14,8 @@
 # --cmd lua bin/Main.lua
 
 # --swf build/Main.swf
+
+# --cpp build/Main.cpp
+# --python build/Main.py
+# --php build/Main.php
+# --cppia build/Main.cppia

@@ -10,6 +10,11 @@ import haxe.EntryPoint;
 #error "This class is not available on this target"
 #end
 
+// should php have threading? php web pages are supposed to execute really quickly, 
+// and i believe threading could put the (non-awaited) async calls into a thread
+// that lets them get processed without hanging the request, 
+// however php has no native threading library...  
+
 @:nullSafety(StrictThreaded)
 class Promise<T> implements IPromise<T> {
   #if (target.threaded)
@@ -54,7 +59,7 @@ class Promise<T> implements IPromise<T> {
   @:noCompletion
   inline function release_lock():Void {
     #if await_hx.verbose trace("thread releasing"); #end
-    lock.release();
+    #if (target.threaded) lock.release(); #end
   }
 
   inline static public function transform<T>(body: ResolverFunc<T>)
@@ -148,6 +153,7 @@ class Promise<T> implements IPromise<T> {
     }
   }
 
+  #if python @:native("__str__") #end
   public function toString(): String
     return 'Promise { <state>: $state }';
 }

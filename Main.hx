@@ -26,6 +26,7 @@ class Main {
 
 	@async static function buh():Int {
 		final meow = @await Cat.speak();
+    // Sys.sleep(5);
 		trace(@await Cat.identify(meow));
 	//	return 67;
 	}
@@ -39,7 +40,7 @@ class Main {
 
     trace(@await p);
 
-    @await buh();
+    buh();
 
     trace(@await test1());
     trace(@await test2());
