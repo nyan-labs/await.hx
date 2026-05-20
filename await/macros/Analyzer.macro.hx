@@ -16,15 +16,16 @@ final class Analyzer {
                             final cls = c.get();
 
                             if(cls.isExtern)continue;
-                            for(i in BANNED_PACK_NAMES) if(cls.pack.length > 0 && cls.pack[0] == i)continue;
+                            if (cls.pack.length > 0 && BANNED_PACK_NAMES.contains(cls.pack[0])) continue;
 
-                            final fields = cls.fields.get();
+                            // get both static and instance-based fields
+                            final fields = cls.fields.get().concat(cls.statics.get());
 
                             for(field in fields){
 
                                 final field_expr = field.expr();
                                 if(field_expr == null) continue;
-                                
+
 								switch field_expr.expr {
 									case TFunction(fun):
 										var pass = false;
@@ -41,6 +42,7 @@ final class Analyzer {
 
                                         switch fun.expr.expr{
                                             case TBlock(be):
+                                                
                                             case _:
                                         }
                                     case _:
