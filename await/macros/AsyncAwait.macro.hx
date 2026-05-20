@@ -223,7 +223,7 @@ class AsyncAwait {
 		if (e == null) return;
 		switch e.expr {
 			case EMeta({name: name}, _) if (AWAIT_META.contains(name)):
-				Context.info('@await is useless outside of async contexts', e.pos);
+				Context.info('@await has no effect outside of @async contexts', e.pos);
 			case _:
 				ExprTools.iter(e, e -> check_is_async_fun(e, field));
 		}
