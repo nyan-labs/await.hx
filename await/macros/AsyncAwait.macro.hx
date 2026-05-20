@@ -202,12 +202,14 @@ class AsyncAwait {
 		var fields = Context.getBuildFields();
 
 		for (field in fields) {
-			if (!meta_includes(field.meta, ASYNC_META))
-				continue;
-
 			switch field.kind {
 				case FFun(f):
-					asynchronize(f, field);
+					switch field.kind {
+						case FFun(f):
+							if(meta_includes(field.meta, ASYNC_META)) asynchronize(f, field);
+							else check_is_async_fun(f.expr, field);
+						case _:
+					}
 
 				case _:
 					null;
@@ -215,5 +217,15 @@ class AsyncAwait {
 		}
 
 		return fields;
+	}
+
+	static function check_is_async_fun(e:Expr, field:Field) {
+		if (e == null) return;
+		switch e.expr {
+			case EMeta({name: name}, _) if (AWAIT_META.contains(name)):
+				Context.info('@await is useless outside of async contexts', e.pos);
+			case _:
+				ExprTools.iter(e, e -> check_is_async_fun(e, field));
+		}
 	}
 }
